@@ -14,9 +14,10 @@ on:
       zed_ref:
         required: true
         type: string
+  pull_request:
 
 env:
-  zed_ref: ${{ github.event.client_payload.merge_commit_sha || inputs.zed_ref }}
+  zed_ref: "edbe753b548b56d140802aae65ae14a190ea5e42"
 
 jobs:
   advance-zed:
@@ -24,7 +25,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os:
+          - ubuntu-latest
+          - blacksmith-2vcpu-ubuntu-2204
+          - blacksmith-4vcpu-ubuntu-2204
+          - blacksmith-8vcpu-ubuntu-2204
+          - blacksmith-16vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,9 +38,7 @@ jobs:
           # is triggered. Using github.ref ensures a run that waits for
           # the concurrency group will see any commits pushed by the runs
           # that caused it to wait, reducing push failures down below.
-          ref: ${{ github.ref }}
-          # We need a token with permission to push.
-          token: ${{ secrets.ZQ_UPDATE_PAT }}
+          ref: ${{ env.zed_ref }}
       - uses: ./.github/actions/setup-zui
       - run: sudo apt-get -y install whois
       - run: yarn workspace zui add zed@brimdata/zed#${{ env.zed_ref }}
